@@ -239,3 +239,25 @@ export const prepareInstructions = ({jobTitle, jobDescription}: { jobTitle: stri
       ${AIResponseFormat}
       Return the analysis as an JSON object, without any other text and without the backticks.
       Do not include any other text or comments.`;
+
+
+export const today = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+});
+export const prepareCoverLetterInstructions = ({jobTitle, jobDescription, feedback}: {
+    jobTitle: string;
+    jobDescription: string;
+    feedback: string;
+}) =>
+    `You are an expert in writing cover letters.
+      Please write a cover letter for the user based on their resume and the job description provided.
+      The user's resume feedback is as follows:
+      ${feedback}
+      The job title is: ${jobTitle}
+      The job description is: ${jobDescription}
+      and For the date use the today's date which is: ${today}
+      Please write a professional and compelling cover letter that highlights the user's skills and experience.
+      The cover letter should be well-structured and free of errors.
+      Return the cover letter as a plain text, without any other text or comments.`;

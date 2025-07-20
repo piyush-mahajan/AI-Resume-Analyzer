@@ -1,3 +1,13 @@
+interface ResumeData {
+    id: string;
+    companyName?: string;
+    jobTitle?: string;
+    jobDescription?: string;
+    imagePath: string;
+    resumePath: string;
+    feedback: Feedback;
+}
+
 interface Resume {
     id: string;
     companyName?: string;
@@ -48,4 +58,5 @@ interface Feedback {
             explanation: string;
         }[];
     };
+    coverLetter?: string;
 }

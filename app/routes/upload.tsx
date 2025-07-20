@@ -5,7 +5,7 @@ import {usePuterStore} from "~/lib/puter";
 import {useNavigate} from "react-router";
 import {convertPdfToImage} from "~/lib/pdf2img";
 import {generateUUID} from "~/lib/utils";
-import {prepareInstructions} from "../../constants";
+import {prepareInstructions, prepareCoverLetterInstructions} from "../../constants";
 
 const Upload = () => {
     const { auth, isLoading, fs, ai, kv } = usePuterStore();
@@ -18,7 +18,7 @@ const Upload = () => {
         setFile(file)
     }
 
-    const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file }: { companyName: string, jobTitle: string, jobDescription: string, file: File  }) => {
+    const handleAnalyze = async ({ companyName, jobTitle, jobDescription, file }: { companyName: string, jobTitle: string, jobDescription: string, file: File }) => {
         setIsProcessing(true);
 
         setStatusText('Uploading the file...');
@@ -35,28 +35,43 @@ const Upload = () => {
 
         setStatusText('Preparing data...');
         const uuid = generateUUID();
-        const data = {
+        const data: ResumeData = {
             id: uuid,
             resumePath: uploadedFile.path,
             imagePath: uploadedImage.path,
             companyName, jobTitle, jobDescription,
-            feedback: '',
+            feedback: {} as Feedback,
         }
         await kv.set(`resume:${uuid}`, JSON.stringify(data));
 
-        setStatusText('Analyzing...');
+        setStatusText('Analyzing resume...');
 
-        const feedback = await ai.feedback(
+                const feedbackResponse = await ai.feedback(
             uploadedFile.path,
             prepareInstructions({ jobTitle, jobDescription })
         )
-        if (!feedback) return setStatusText('Error: Failed to analyze resume');
+                if (!feedbackResponse) return setStatusText('Error: Failed to analyze resume');
 
-        const feedbackText = typeof feedback.message.content === 'string'
-            ? feedback.message.content
-            : feedback.message.content[0].text;
+                const feedbackText = typeof feedbackResponse.message.content === 'string'
+            ? feedbackResponse.message.content
+            : feedbackResponse.message.content[0].text;
 
-        data.feedback = JSON.parse(feedbackText);
+                data.feedback = JSON.parse(feedbackText);
+        await kv.set(`resume:${uuid}`, JSON.stringify(data));
+
+        setStatusText('Generating cover letter...');
+
+        const coverLetterResponse = await ai.feedback(
+            uploadedFile.path,
+            prepareCoverLetterInstructions({ jobTitle, jobDescription, feedback: feedbackText })
+        )
+        if (!coverLetterResponse) return setStatusText('Error: Failed to generate cover letter');
+
+        const coverLetterText = typeof coverLetterResponse.message.content === 'string'
+            ? coverLetterResponse.message.content
+            : coverLetterResponse.message.content[0].text;
+
+        data.feedback.coverLetter = coverLetterText;
         await kv.set(`resume:${uuid}`, JSON.stringify(data));
         setStatusText('Analysis complete, redirecting...');
         console.log(data);

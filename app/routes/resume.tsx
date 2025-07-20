@@ -4,6 +4,7 @@ import {usePuterStore} from "~/lib/puter";
 import Summary from "~/components/Summary";
 import ATS from "~/components/ATS";
 import Details from "~/components/Details";
+import CoverLetter from "~/components/CoverLetter";
 
 export const meta = () => ([
     { title: 'PIYUCV | Review ' },
@@ -78,6 +79,7 @@ const Resume = () => {
                             <Summary feedback={feedback} />
                             <ATS score={feedback.ATS.score || 0} suggestions={feedback.ATS.tips || []} />
                             <Details feedback={feedback} />
+                            {feedback.coverLetter && <CoverLetter coverLetter={feedback.coverLetter} />}
                         </div>
                     ) : (
                         <img src="/images/resume-scan-2.gif" className="w-full" />
